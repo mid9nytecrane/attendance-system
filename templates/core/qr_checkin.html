@@ -1,0 +1,104 @@
+{% extends "core/base.html" %}
+{% block title %}Check In — {{ session.date }}{% endblock %}
+
+{% block content %}
+<section class="flex items-center justify-center min-h-[80vh] px-4 py-12">
+    <div class="w-full max-w-md">
+
+        <div class="bg-white rounded-2xl shadow-lg border border-[#d4821a]/20 overflow-hidden">
+
+            <!-- Header -->
+            <div class="bg-[#3d3520] px-8 py-6 text-center">
+                <h1 class="text-xl font-extrabold text-[#d4821a]">NCA Digital Skills Centre</h1>
+                <p class="text-sm text-[#e8d5a3]/80 mt-1">QR Session Check-in</p>
+                <p class="text-xs text-[#e8d5a3]/50 mt-1">{{ session.date }}{% if session.title %} — {{ session.title }}{% endif %}</p>
+            </div>
+
+            <div class="px-8 py-8">
+
+                {% if checked_in %}
+                <!-- ── Success ── -->
+                <div class="text-center py-2">
+                    <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center
+                        {% if status == 'present' %}bg-green-100{% else %}bg-yellow-100{% endif %}">
+                        {% if status == 'present' %}
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {% else %}
+                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <h2 class="text-2xl font-bold text-[#3d3520] mb-1">
+                        {% if status == 'present' %}You're In!{% else %}Checked In — Late{% endif %}
+                    </h2>
+                    <p class="text-sm font-semibold text-[#d4821a] mb-1">{{ applicant }}</p>
+                    <p class="text-sm text-[#3d3520]/60">
+                        Marked as
+                        <span class="font-semibold {% if status == 'present' %}text-green-700{% else %}text-yellow-700{% endif %}">
+                            {{ status|capfirst }}
+                        </span>
+                        for {{ session.date }}.
+                    </p>
+                    <p class="text-xs text-[#3d3520]/40 mt-4">You may now proceed to your workstation.</p>
+                </div>
+
+                {% elif already_checked_in %}
+                <!-- ── Already checked in ── -->
+                <div class="text-center py-2">
+                    <div class="w-16 h-16 rounded-full bg-[#e8d5a3] mx-auto mb-4 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#d4821a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-[#3d3520] mb-1">Already Checked In</h2>
+                    <p class="text-sm text-[#3d3520]/60">You have already recorded your attendance for this session.</p>
+                    <a href="{% url 'applicant_dashboard' %}"
+                       class="inline-block mt-5 px-5 py-2 text-sm font-semibold text-white bg-[#d4821a] rounded-lg hover:bg-[#b86e14] transition-colors">
+                        View My Attendance
+                    </a>
+                </div>
+
+                {% else %}
+                <!-- ── Confirm check-in ── -->
+                <!-- Identity card — shows who is checking in, no input needed -->
+                <div class="bg-[#f5f5e0] border border-[#d4821a]/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-sm font-bold text-[#d4821a] flex-shrink-0">
+                        {{ applicant.user.first_name|first|upper }}{{ applicant.user.last_name|first|upper }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-[#3d3520]">{{ applicant.user.get_full_name }}</p>
+                        <code class="text-xs text-[#3d3520]/50 font-mono">{{ applicant.user.username }}</code>
+                    </div>
+                    <svg class="w-5 h-5 text-green-500 ml-auto flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+
+                <p class="text-sm text-[#3d3520]/60 text-center mb-5">
+                    Confirm your attendance for today's session.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="w-full py-3 text-base font-semibold text-white bg-[#d4821a] rounded-lg hover:bg-[#b86e14] active:scale-95 transition-all">
+                        Confirm Check-in
+                    </button>
+                </form>
+
+                <p class="text-center text-xs text-[#3d3520]/40 mt-4">
+                    Not you?
+                    <a href="{% url 'logout' %}" class="text-[#d4821a] hover:underline font-medium">Sign out</a>
+                    and sign in with your own account.
+                </p>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

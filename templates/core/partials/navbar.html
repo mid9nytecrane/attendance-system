@@ -1,0 +1,38 @@
+<nav class="w-full bg-[#3d3520] shadow-md">
+    <div class="container mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+
+        <!-- Logo -->
+        <a href="{% url 'home' %}" class="flex items-center gap-2 select-none">
+            <span class="text-xl font-extrabold text-[#d4821a] tracking-tight">NCA</span>
+            <span class="text-sm font-medium text-[#e8d5a3] hidden sm:inline">Digital Skills</span>
+        </a>
+
+        <!-- Right side -->
+        <div class="flex items-center gap-4">
+            {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                <a href="{% url 'admin_dashboard' %}"
+                   class="text-sm text-[#e8d5a3] hover:text-[#d4821a] transition-colors">
+                    Dashboard
+                </a>
+                {% else %}
+                <a href="{% url 'applicant_dashboard' %}"
+                   class="text-sm text-[#e8d5a3] hover:text-[#d4821a] transition-colors">
+                    My Attendance
+                </a>
+                {% endif %}
+                <span class="text-xs text-[#e8d5a3]/60 hidden sm:inline">{{ user.get_full_name|default:user.username }}</span>
+                <a href="{% url 'logout' %}"
+                   class="px-3 py-1.5 text-sm font-medium text-[#3d3520] bg-[#e8d5a3] rounded hover:bg-[#d4821a] hover:text-white transition-colors">
+                    Sign out
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}"
+                   class="px-4 py-2 text-sm font-medium text-white bg-[#d4821a] rounded hover:bg-[#b86e14] transition-colors">
+                    Sign in
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+</nav>

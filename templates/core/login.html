@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+{% block title %}Sign In — NCA Attendance{% endblock %}
+
+{% block content %}
+<section class="flex items-center justify-center min-h-[80vh] px-4 py-12">
+    <div class="w-full max-w-md">
+
+        <!-- Card -->
+        <div class="bg-white rounded-2xl shadow-lg border border-[#d4821a]/20 overflow-hidden">
+
+            <!-- Header -->
+            <div class="bg-[#3d3520] px-8 py-6 text-center">
+                <h1 class="text-2xl font-extrabold text-[#d4821a]">NCA Digital Skills</h1>
+                <p class="text-sm text-[#e8d5a3]/70 mt-1">Sign in to your attendance account</p>
+            </div>
+
+            <!-- Form -->
+            <div class="px-8 py-8">
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-5">
+                        <label for="username" class="block text-sm font-semibold text-[#3d3520] mb-1">Username</label>
+                        <input type="text" id="username" name="username" required autofocus
+                               class="w-full px-4 py-2.5 rounded-md border border-[#e8d5a3] bg-[#f5f5e0] text-[#3d3520] text-sm focus:outline-none focus:ring-2 focus:ring-[#d4821a] focus:border-transparent placeholder-[#3d3520]/30"
+                               placeholder="Enter your username">
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-semibold text-[#3d3520] mb-1">Password</label>
+                        <input type="password" id="password" name="password" required
+                               class="w-full px-4 py-2.5 rounded-md border border-[#e8d5a3] bg-[#f5f5e0] text-[#3d3520] text-sm focus:outline-none focus:ring-2 focus:ring-[#d4821a] focus:border-transparent placeholder-[#3d3520]/30"
+                               placeholder="Enter your password">
+                    </div>
+
+                    <button type="submit"
+                            class="w-full py-3 text-base font-semibold text-white bg-[#d4821a] rounded-md hover:bg-[#b86e14] transition-colors">
+                        Sign In
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+        <p class="text-center text-sm text-[#3d3520]/50 mt-6">
+            New applicant?
+            <a href="{% url 'register' %}" class="text-[#d4821a] font-semibold hover:underline">Create an account</a>
+        </p>
+
+    </div>
+</section>
+{% endblock %}
