@@ -52,10 +52,21 @@
                     <!-- Cohort -->
                     <div class="mb-4">
                         <label for="cohort" class="block text-sm font-semibold text-[#3d3520] mb-1">Cohort / Batch</label>
-                        <input type="text" id="cohort" name="cohort"
-                               value="{{ post.cohort|default:'' }}"
-                               class="w-full px-4 py-2.5 rounded-md border border-[#e8d5a3] bg-[#f5f5e0] text-[#3d3520] text-sm focus:outline-none focus:ring-2 focus:ring-[#d4821a] focus:border-transparent"
-                               placeholder="e.g. Cohort 1">
+                        <div class="relative">
+                            <select id="cohort" name="cohort"
+                                    class="w-full px-4 py-2.5 rounded-md border border-[#e8d5a3] bg-[#f5f5e0] text-[#3d3520] text-sm focus:outline-none focus:ring-2 focus:ring-[#d4821a] focus:border-transparent appearance-none cursor-pointer">
+                                <option value="" disabled {% if not post.cohort %}selected{% endif %}>— Select your cohort —</option>
+                                {% for value, label in cohort_choices %}
+                                <option value="{{ value }}" {% if post.cohort == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <!-- Chevron icon -->
+                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                                <svg class="w-4 h-4 text-[#d4821a]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Password -->

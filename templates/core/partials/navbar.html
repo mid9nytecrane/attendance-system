@@ -2,9 +2,18 @@
     <div class="container mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
 
         <!-- Logo -->
-        <a href="{% url 'home' %}" class="flex items-center gap-2 select-none">
-            <span class="text-xl font-extrabold text-[#d4821a] tracking-tight">NCA</span>
-            <span class="text-sm font-medium text-[#e8d5a3] hidden sm:inline">Digital Skills</span>
+        <a href="{% url 'home' %}" class="flex items-center gap-3 select-none group">
+            <!-- Icon badge -->
+            <div class="w-9 h-9 rounded-lg bg-[#d4821a] flex items-center justify-center shrink-0 shadow-md group-hover:bg-[#b86e14] transition-colors">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <!-- Text -->
+            <div class="flex flex-col leading-none">
+                <span class="text-sm font-extrabold text-[#d4821a] tracking-tight">Damongo</span>
+                <span class="text-[10px] font-semibold text-[#e8d5a3]/70 uppercase tracking-widest hidden sm:block">Community Information Center</span>
+            </div>
         </a>
 
         <!-- Right side -->

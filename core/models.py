@@ -4,9 +4,15 @@ import uuid
 
 
 class Applicant(models.Model):
+    COHORT_CHOICES = [
+        ('cohort 1', 'Cohort 1'),
+        ('cohort 2', 'Cohort 2'),
+        ('cohort 3', 'Cohort 3'),
+        ('cohort 4', 'Cohort 4')
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='applicant')
-    phone = models.CharField(max_length=20, blank=True)
-    cohort = models.CharField(max_length=50, blank=True, help_text="e.g. Cohort 1, Batch A")
+    phone = models.CharField(max_length=10, blank=True)
+    cohort = models.CharField(max_length=50, choices=COHORT_CHOICES, blank=True, help_text="e.g. Cohort 1, Batch A")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

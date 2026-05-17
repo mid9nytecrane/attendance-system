@@ -71,7 +71,7 @@
 
         {% else %}
         <div class="bg-[#e8d5a3] border border-[#d4821a]/30 rounded-xl px-6 py-4 mb-8 text-sm text-[#3d3520] flex items-center gap-3">
-            <svg class="w-5 h-5 text-[#d4821a] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-[#d4821a] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             No active session. Create one via
@@ -175,7 +175,7 @@
                             <td class="px-6 py-3.5 text-[#3d3520]/40 text-xs font-medium">{{ forloop.counter }}</td>
                             <td class="px-6 py-3.5">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-xs font-bold text-[#d4821a] flex-shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-xs font-bold text-[#d4821a] shrink-0">
                                         {{ applicant.user.first_name|first|upper }}{{ applicant.user.last_name|first|upper }}
                                     </div>
                                     <span class="font-semibold text-[#3d3520]">{{ applicant.user.get_full_name|default:"—" }}</span>

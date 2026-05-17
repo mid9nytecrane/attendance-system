@@ -82,15 +82,15 @@ def register_view(request):
         # Basic validation
         if not first_name or not last_name:
             messages.error(request, 'First name and last name are required.')
-            return render(request, 'core/register.html', {'post': request.POST})
+            return render(request, 'core/register.html', {'post': request.POST, 'cohort_choices': Applicant.COHORT_CHOICES})
 
         if len(password) < 6:
             messages.error(request, 'Password must be at least 6 characters.')
-            return render(request, 'core/register.html', {'post': request.POST})
+            return render(request, 'core/register.html', {'post': request.POST, 'cohort_choices': Applicant.COHORT_CHOICES})
 
         if password != password2:
             messages.error(request, 'Passwords do not match.')
-            return render(request, 'core/register.html', {'post': request.POST})
+            return render(request, 'core/register.html', {'post': request.POST, 'cohort_choices': Applicant.COHORT_CHOICES})
 
         # Generate unique user ID
         user_id = generate_user_id()
@@ -110,7 +110,7 @@ def register_view(request):
         )
         return redirect('login')
 
-    return render(request, 'core/register.html')
+    return render(request, 'core/register.html', {'cohort_choices': Applicant.COHORT_CHOICES})
 
 
 def _redirect_after_login(user):

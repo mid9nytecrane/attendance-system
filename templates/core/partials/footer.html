@@ -1,7 +1,24 @@
 <footer class="w-full bg-[#3d3520] mt-auto">
-    <div class="container mx-auto max-w-7xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span class="text-sm font-bold text-[#d4821a]">NCA Digital Skills Centre</span>
-        <p class="text-xs text-[#e8d5a3]/60">&copy; {% now "Y" %} All rights reserved.</p>
-        <p class="text-xs text-[#e8d5a3]/60">Developed by <span class="text-[#d4821a] font-semibold">Sheriff Sakara</span></p>
+    <div class="container mx-auto max-w-7xl px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+
+        <!-- Logo lockup (smaller scale) -->
+        <a href="/" class="flex items-center gap-2.5 select-none group">
+            <div class="w-7 h-7 rounded-md bg-[#d4821a] flex items-center justify-center shrink-0 group-hover:bg-[#b86e14] transition-colors">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div class="flex flex-col leading-none">
+                <span class="text-xs font-extrabold text-[#d4821a] tracking-tight">Damongo</span>
+                <span class="text-[9px] font-semibold text-[#e8d5a3]/50 uppercase tracking-widest">Community Information Center</span>
+            </div>
+        </a>
+
+        <p class="text-xs text-[#e8d5a3]/50">&copy; {% now "Y" %} All rights reserved.</p>
+
+        <p class="text-xs text-[#e8d5a3]/50">
+            Developed by <span class="text-[#d4821a] font-semibold">Sheriff Sakara</span>
+        </p>
+
     </div>
 </footer>

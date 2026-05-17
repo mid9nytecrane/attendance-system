@@ -87,14 +87,14 @@
                 <!-- ── Confirm check-in ── -->
                 <!-- Identity card -->
                 <div class="bg-[#f5f5e0] border border-[#d4821a]/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-sm font-bold text-[#d4821a] flex-shrink-0">
+                    <div class="w-11 h-11 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-sm font-bold text-[#d4821a] shrink-0">
                         {{ applicant.user.first_name|first|upper }}{{ applicant.user.last_name|first|upper }}
                     </div>
                     <div>
                         <p class="text-sm font-bold text-[#3d3520]">{{ applicant.user.get_full_name }}</p>
                         <code class="text-xs text-[#3d3520]/50 font-mono">{{ applicant.user.username }}</code>
                     </div>
-                    <svg class="w-5 h-5 text-green-500 ml-auto flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-green-500 ml-auto shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
                 </div>
