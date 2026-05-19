@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 import uuid
 
 
@@ -29,16 +30,32 @@ class Applicant(models.Model):
 
 
 class Session(models.Model):
-    date = models.DateField(unique=True)
+    date = models.DateField()
     title = models.CharField(max_length=200, blank=True, help_text="e.g. Week 3 - Python Basics")
     start_time = models.TimeField()
+    end_time = models.TimeField(null=True, blank=True, help_text="Time the session ends")
     late_after = models.TimeField(help_text="Check-ins after this time are marked late")
     qr_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     is_active = models.BooleanField(default=False, help_text="Only one session should be active at a time")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['-date', '-start_time']
+
+    def clean(self):
+        """Prevent time overlaps between sessions on the same day."""
+        if not self.start_time or not self.end_time:
+            return
+        overlapping = Session.objects.filter(
+            date=self.date,
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time,
+        ).exclude(pk=self.pk)
+        if overlapping.exists():
+            raise ValidationError(
+                f"A session already exists on {self.date} that overlaps with "
+                f"{self.start_time.strftime('%H:%M')}–{self.end_time.strftime('%H:%M')}."
+            )
 
     def __str__(self):
         return f"Session {self.date} — {self.title or 'No title'}"

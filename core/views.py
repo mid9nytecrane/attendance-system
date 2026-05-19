@@ -19,6 +19,20 @@ def is_admin(user):
     return user.is_staff
 
 
+def _close_expired_sessions():
+    """
+    Close any active sessions whose end_time has passed.
+    Called at the top of every admin-facing view so the status
+    is always accurate when the admin looks at the dashboard.
+    """
+    now_time = timezone.localtime(timezone.now()).time()
+    Session.objects.filter(
+        is_active=True,
+        end_time__isnull=False,
+        end_time__lte=now_time,
+    ).update(is_active=False)
+
+
 def generate_user_id():
     """
     Generate the next sequential user ID in the format DMG_CIC_001.
@@ -140,6 +154,13 @@ def qr_checkin_view(request, token):
         messages.error(request, 'No applicant profile found for your account.')
         return redirect('home')
 
+    # Real-time end-time guard (catches the gap before the scheduler fires)
+    now_time = timezone.localtime(timezone.now()).time()
+    if session.end_time and now_time >= session.end_time:
+        session.is_active = False
+        session.save(update_fields=['is_active'])
+        return render(request, 'core/qr_checkin.html', {'session_ended': True})
+
     already_checked_in = AttendanceRecord.objects.filter(
         applicant=applicant, session=session
     ).exists()
@@ -189,6 +210,14 @@ def manual_checkin_view(request):
 
     active_session = Session.objects.filter(is_active=True).first()
 
+    # Real-time end-time guard
+    if active_session and active_session.end_time:
+        now_time = timezone.localtime(timezone.now()).time()
+        if now_time >= active_session.end_time:
+            active_session.is_active = False
+            active_session.save(update_fields=['is_active'])
+            active_session = None
+
     already_checked_in = (
         active_session and
         AttendanceRecord.objects.filter(applicant=applicant, session=active_session).exists()
@@ -233,6 +262,7 @@ def applicant_dashboard_view(request):
         messages.error(request, 'No applicant profile found for your account.')
         return redirect('home')
 
+    _close_expired_sessions()   # keep QR card state accurate
     records = applicant.attendance_records.select_related('session').all()
     summary = applicant.attendance_summary()
     active_session = Session.objects.filter(is_active=True).first()
@@ -250,6 +280,7 @@ def applicant_dashboard_view(request):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def admin_dashboard_view(request):
+    _close_expired_sessions()   # ensure stale sessions are closed before rendering
     sessions = Session.objects.all()
     applicants = Applicant.objects.select_related('user').all()
     active_session = Session.objects.filter(is_active=True).first()
@@ -269,6 +300,7 @@ def admin_dashboard_view(request):
 @login_required(login_url='login')
 @user_passes_test(is_admin, login_url='login')
 def session_detail_view(request, session_id):
+    _close_expired_sessions()   # ensure stale sessions are closed before rendering
     session = get_object_or_404(Session, pk=session_id)
     records = session.attendance_records.select_related('applicant__user').all()
 

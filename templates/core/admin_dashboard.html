@@ -28,7 +28,7 @@
                 <span class="inline-block px-2.5 py-0.5 text-xs font-bold bg-[#d4821a] text-white rounded-full mb-2 uppercase tracking-wider">● Live Session</span>
                 <h2 class="text-lg font-bold text-white">{{ active_session.date }} — {{ active_session.title|default:"No title" }}</h2>
                 <p class="text-sm text-[#e8d5a3]/60 mt-1">
-                    Starts {{ active_session.start_time }} &nbsp;·&nbsp; Late after {{ active_session.late_after }}
+                    Starts {{ active_session.start_time }} &nbsp;·&nbsp; Late after {{ active_session.late_after }}{% if active_session.end_time %} &nbsp;·&nbsp; Ends {{ active_session.end_time }}{% endif %}
                 </p>
             </div>
             <div class="flex gap-3 flex-wrap">
@@ -103,6 +103,7 @@
                             <th class="px-6 py-3 text-left">Date</th>
                             <th class="px-6 py-3 text-left">Title</th>
                             <th class="px-6 py-3 text-center">Start</th>
+                            <th class="px-6 py-3 text-center">End</th>
                             <th class="px-6 py-3 text-center">Late After</th>
                             <th class="px-6 py-3 text-center">Status</th>
                             <th class="px-6 py-3 text-center">Actions</th>
@@ -115,6 +116,7 @@
                             <td class="px-6 py-3.5 font-semibold text-[#3d3520]">{{ session.date }}</td>
                             <td class="px-6 py-3.5 text-[#3d3520]/70">{{ session.title|default:"—" }}</td>
                             <td class="px-6 py-3.5 text-center text-[#3d3520]/60 text-xs">{{ session.start_time }}</td>
+                            <td class="px-6 py-3.5 text-center text-[#3d3520]/60 text-xs">{{ session.end_time|default:"—" }}</td>
                             <td class="px-6 py-3.5 text-center text-[#3d3520]/60 text-xs">{{ session.late_after }}</td>
                             <td class="px-6 py-3.5 text-center">
                                 {% if session.is_active %}

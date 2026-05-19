@@ -16,7 +16,19 @@
 
             <div class="px-8 py-8">
 
-                {% if checked_in %}
+                {% if session_ended %}
+                <!-- ── Session ended ── -->
+                <div class="text-center py-4">
+                    <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-[#3d3520] mb-2">Session Has Ended</h2>
+                    <p class="text-sm text-[#3d3520]/60">Check-in is no longer available for this session. Please contact your trainer.</p>
+                </div>
+
+                {% elif checked_in %}
                 <!-- ── Success ── -->
                 <div class="text-center py-2">
                     <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center

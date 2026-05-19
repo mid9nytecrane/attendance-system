@@ -20,6 +20,7 @@
             <p class="text-sm text-[#3d3520]/50 mt-1 flex items-center gap-2 flex-wrap">
                 <span>Starts {{ session.start_time }}</span>
                 <span class="text-[#d4821a]">·</span>
+                {% if session.end_time %}<span>Ends {{ session.end_time }}</span><span class="text-[#d4821a]">·</span>{% endif %}
                 <span>Late after {{ session.late_after }}</span>
                 {% if session.is_active %}
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
