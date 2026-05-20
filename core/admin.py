@@ -15,10 +15,10 @@ class ApplicantAdmin(admin.ModelAdmin):
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ('date', 'title', 'start_time', 'end_time', 'late_after', 'is_active', 'qr_token')
+    list_display = ('date', 'title', 'start_time', 'end_time', 'late_after', 'checkin_code', 'is_active', 'qr_token')
     list_filter = ('is_active',)
     search_fields = ('title',)
-    readonly_fields = ('qr_token',)
+    readonly_fields = ('qr_token', 'checkin_code')
 
 
 @admin.register(AttendanceRecord)

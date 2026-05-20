@@ -1,0 +1,140 @@
+{% extends "core/base.html" %}
+{% block title %}QR Code — {{ session.date }}{% endblock %}
+
+{% block content %}
+<section class="w-full px-6 py-10">
+    <div class="container mx-auto max-w-3xl">
+
+        <!-- Back + header -->
+        <div class="mb-6">
+            <a href="{% url 'session_detail' session.id %}" class="inline-flex items-center gap-1 text-sm text-[#d4821a] hover:underline font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Session
+            </a>
+            <h1 class="text-2xl font-extrabold text-[#3d3520] mt-3">
+                QR Code for Session
+            </h1>
+            <p class="text-sm text-[#3d3520]/50 mt-1">
+                {{ session.date }}{% if session.title %} — {{ session.title }}{% endif %}
+            </p>
+        </div>
+
+        <!-- QR Code Display Card -->
+        <div class="bg-white rounded-2xl shadow-lg border border-[#d4821a]/20 p-8">
+            
+            <div class="flex flex-col items-center">
+                
+                <!-- QR Code Image -->
+                {% if session.qrcode %}
+                <div class="mb-6 p-6 bg-white rounded-lg border-4 border-[#3d3520]">
+                    <img src="{{ session.qrcode.url }}" 
+                         alt="QR Code for session check-in" 
+                         class="w-64 h-64 object-contain">
+                </div>
+                {% else %}
+                <div class="mb-6 p-6 bg-red-50 rounded-lg border-2 border-red-300 text-center w-full">
+                    <p class="text-red-800 font-semibold">QR Code not generated yet</p>
+                    <p class="text-sm text-red-600 mt-1">The QR code for this session is still being generated.</p>
+                </div>
+                {% endif %}
+
+                <!-- Session Details -->
+                <div class="w-full bg-[#f5f5e0] rounded-xl p-6 mb-6 border border-[#d4821a]/20">
+                    <h2 class="text-sm font-bold text-[#3d3520]/70 uppercase tracking-widest mb-4">Session Details</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm text-[#3d3520]/60">Date:</span>
+                            <span class="text-sm font-semibold text-[#3d3520]">{{ session.date }}</span>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm text-[#3d3520]/60">Title:</span>
+                            <span class="text-sm font-semibold text-[#3d3520]">{{ session.title|default:"No title" }}</span>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm text-[#3d3520]/60">Time:</span>
+                            <span class="text-sm font-semibold text-[#3d3520]">{{ session.start_time }} — {% if session.end_time %}{{ session.end_time }}{% else %}(not set){% endif %}</span>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm text-[#3d3520]/60">Check-in Token:</span>
+                            <code class="text-xs font-mono text-[#d4821a] break-all">{{ session.qr_token }}</code>
+                        </div>
+                        {% if session.is_active %}
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm text-[#3d3520]/60">Status:</span>
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Active
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="w-full bg-[#e8d5a3]/20 rounded-xl p-6 border border-[#d4821a]/30">
+                    <h3 class="text-sm font-bold text-[#3d3520] mb-3">How to Use</h3>
+                    <ul class="space-y-2 text-sm text-[#3d3520]">
+                        <li class="flex gap-2">
+                            <span class="flex-shrink-0 text-[#d4821a] font-bold">1.</span>
+                            <span>Display this QR code on a screen or print it for the session location.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="flex-shrink-0 text-[#d4821a] font-bold">2.</span>
+                            <span>Applicants can scan this code with their mobile device to check in.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="flex-shrink-0 text-[#d4821a] font-bold">3.</span>
+                            <span>They will be directed to the check-in page where they can confirm their attendance.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 mt-8 w-full justify-center flex-wrap">
+                    <button onclick="window.print()"
+                            class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-[#d4821a] rounded-lg hover:bg-[#b86e14] transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        Print QR Code
+                    </button>
+                    {% if session.qrcode %}
+                    <a href="{{ session.qrcode.url }}" download
+                       class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-[#3d3520] bg-[#e8d5a3] rounded-lg hover:bg-[#d4821a] hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download QR Code
+                    </a>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<style>
+    @media print {
+        body {
+            background-color: white;
+        }
+        section {
+            padding: 0;
+        }
+        .container {
+            max-width: 100%;
+        }
+        a[href^="{% url"]"]:after {
+            content: "";
+        }
+        .print\:hidden {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,7 +1,15 @@
+import random
+import string
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-import uuid
+
+
+def _generate_checkin_code():
+    """Generate a random 6-character uppercase alphanumeric code."""
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(random.choices(chars, k=6))
 
 
 class Applicant(models.Model):
@@ -36,6 +44,12 @@ class Session(models.Model):
     end_time = models.TimeField(null=True, blank=True, help_text="Time the session ends")
     late_after = models.TimeField(help_text="Check-ins after this time are marked late")
     qr_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    qrcode = models.ImageField(upload_to="qr_codes/", blank=True, null=True)
+    checkin_code = models.CharField(
+        max_length=6,
+        default=_generate_checkin_code,
+        help_text="6-character code printed and posted at the centre for manual check-in",
+    )
     is_active = models.BooleanField(default=False, help_text="Only one session should be active at a time")
     created_at = models.DateTimeField(auto_now_add=True)
 

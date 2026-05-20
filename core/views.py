@@ -195,8 +195,8 @@ def qr_checkin_view(request, token):
 @login_required(login_url='login')
 def manual_checkin_view(request):
     """
-    Fallback check-in — requires login.
-    Applicant checks in only themselves; no username field accepted.
+    Fallback check-in — requires login + the session's daily check-in code.
+    Applicant enters the code posted at the centre to confirm their presence.
     """
     if request.user.is_staff:
         messages.info(request, 'Use the admin panel to manage attendance manually.')
@@ -229,9 +229,16 @@ def manual_checkin_view(request):
             return render(request, 'core/manual_checkin.html', {'session': None, 'applicant': applicant})
 
         if already_checked_in:
-            messages.warning(request, 'You have already checked in for this session.')
             return render(request, 'core/manual_checkin.html', {
                 'session': active_session, 'applicant': applicant, 'already_checked_in': True
+            })
+
+        entered_code = request.POST.get('checkin_code', '').strip().upper()
+        if entered_code != active_session.checkin_code.upper():
+            return render(request, 'core/manual_checkin.html', {
+                'session': active_session,
+                'applicant': applicant,
+                'code_error': True,
             })
 
         now_time = timezone.localtime(timezone.now()).time()
@@ -410,7 +417,7 @@ def export_csv_view(request, session_id):
 
     writer = csv.writer(response)
     # Session info header
-    writer.writerow([f'NCA Digital Skills — Attendance Report'])
+    writer.writerow([f'Damongo — Attendance Report'])
     writer.writerow([f'Session: {session.date} — {session.title or "No title"}'])
     writer.writerow([f'Exported: {timezone.now().strftime("%Y-%m-%d %H:%M")}'])
     writer.writerow([])
@@ -454,7 +461,7 @@ def export_excel_view(request, session_id):
     # ── Title block ─────────────────────────────────────────────────────────
     ws.merge_cells('A1:G1')
     title_cell = ws['A1']
-    title_cell.value = 'NCA Digital Skills Centre — Attendance Report'
+    title_cell.value = 'Damongo CIC — Attendance Report'
     title_cell.font = Font(name='Calibri', bold=True, size=14, color=white)
     title_cell.fill = PatternFill('solid', fgColor=dark)
     title_cell.alignment = Alignment(horizontal='center', vertical='center')
@@ -525,3 +532,15 @@ def export_excel_view(request, session_id):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     wb.save(response)
     return response
+
+
+@login_required(login_url='login')
+@user_passes_test(is_admin, login_url='login')
+def qrcode_display_view(request, session_id):
+    """Display the QR code image for a session (admin only)."""
+    _close_expired_sessions()
+    session = get_object_or_404(Session, pk=session_id)
+    
+    return render(request, 'core/qrcode_display.html', {
+        'session': session,
+    })

@@ -50,26 +50,77 @@
             </div>
         </div>
 
-        <!-- QR info bar -->
-        <div class="bg-[#3d3520] rounded-xl px-6 py-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-                <p class="text-xs text-[#e8d5a3]/50 font-semibold uppercase tracking-widest mb-1">QR Check-in URL</p>
-                <code class="text-sm text-[#d4821a] break-all font-mono">/checkin/{{ session.qr_token }}/</code>
+        <!-- QR info bar + Check-in code card -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+            <!-- QR bar -->
+            <div class="bg-[#3d3520] rounded-xl px-6 py-4 flex flex-col justify-between gap-3">
+                <div>
+                    <p class="text-xs text-[#e8d5a3]/50 font-semibold uppercase tracking-widest mb-1">QR Check-in URL</p>
+                    <code class="text-sm text-[#d4821a] break-all font-mono">/checkin/{{ session.qr_token }}/</code>
+                </div>
+                <a href="{% url 'qrcode_display' session.id %}" target="_blank"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#3d3520] bg-[#e8d5a3] rounded-lg hover:bg-[#d4821a] hover:text-white transition-colors self-start">
+                    Open QR Page ↗
+                </a>
             </div>
-            <div class="flex gap-2 flex-wrap flex-shrink-0">
-                <a href="{% url 'qr_checkin' session.qr_token %}" target="_blank"
-                   class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#3d3520] bg-[#e8d5a3] rounded-lg hover:bg-[#d4821a] hover:text-white transition-colors">
-                    QR Check-in ↗
-                </a>
-                <a href="{% url 'manual_checkin' %}" target="_blank"
-                   class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#d4821a]/80 rounded-lg hover:bg-[#d4821a] transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                    </svg>
-                    Manual Fallback ↗
-                </a>
+
+            <!-- Check-in code card (printable) -->
+            <div id="checkin-code-card" class="bg-white rounded-xl border-2 border-[#d4821a]/40 px-6 py-4 flex flex-col justify-between gap-3">
+                <div>
+                    <p class="text-xs text-[#3d3520]/50 font-semibold uppercase tracking-widest mb-2">Manual Check-in Code</p>
+                    <div class="flex items-center gap-3">
+                        <span class="text-4xl font-extrabold font-mono tracking-[0.2em] text-[#3d3520]">
+                            {{ session.checkin_code }}
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#e8d5a3] text-[#3d3520]">
+                            Today only
+                        </span>
+                    </div>
+                    <p class="text-xs text-[#3d3520]/50 mt-2">
+                        Print and post this code at the entrance. Applicants enter it on the manual check-in page.
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{% url 'manual_checkin' %}" target="_blank"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#d4821a] rounded-lg hover:bg-[#b86e14] transition-colors">
+                        Manual Check-in Page ↗
+                    </a>
+                    <button onclick="printCode()"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#3d3520] bg-[#e8d5a3] rounded-lg hover:bg-[#d4821a] hover:text-white transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        Print Code
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Hidden print layout -->
+        <div id="print-area" class="hidden">
+            <div style="font-family: Arial, sans-serif; text-align: center; padding: 40px; border: 3px solid #d4821a; border-radius: 16px; max-width: 400px; margin: 40px auto;">
+                <p style="font-size: 13px; color: #3d3520; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 8px;">Damongo Community Information Center</p>
+                <p style="font-size: 13px; color: #888; margin-bottom: 4px;">{{ session.date }}{% if session.title %} — {{ session.title }}{% endif %}</p>
+                <p style="font-size: 13px; color: #888; margin-bottom: 24px;">Manual Check-in Code</p>
+                <p style="font-size: 72px; font-weight: 900; letter-spacing: 12px; color: #3d3520; margin: 0;">{{ session.checkin_code }}</p>
+                <p style="font-size: 12px; color: #aaa; margin-top: 24px;">Valid for today's session only · {{ session.start_time }} – {{ session.end_time|default:"end" }}</p>
+                <p style="font-size: 11px; color: #ccc; margin-top: 8px;">Go to /checkin/ and enter this code to mark your attendance</p>
             </div>
         </div>
+
+        <script>
+        function printCode() {
+            const printArea = document.getElementById('print-area').innerHTML;
+            const win = window.open('', '_blank', 'width=600,height=500');
+            win.document.write('<html><head><title>Check-in Code</title></head><body>' + printArea + '</body></html>');
+            win.document.close();
+            win.focus();
+            win.print();
+            win.close();
+        }
+        </script>
 
         <!-- Action bar: mark absent + export buttons -->
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
