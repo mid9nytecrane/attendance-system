@@ -11,7 +11,8 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
 
     # QR check-in (public — scanned from QR code)
-    path('checkin/<uuid:token>/', views.qr_checkin_view, name='qr_checkin'),
+    path('checkin/', views.qr_checkin_view, name='qr_checkin'),
+    path('api/verify-qr/', views.verify_qr_code, name='verify_qr_code'),
     # Manual fallback check-in (no QR needed — applicant types their User ID)
     path('checkin/', views.manual_checkin_view, name='manual_checkin'),
 

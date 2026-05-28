@@ -9,7 +9,7 @@
 
             <!-- Header -->
             <div class="bg-[#3d3520] px-8 py-6 text-center">
-                <h1 class="text-xl font-extrabold text-[#d4821a]">NCA Digital Skills Centre</h1>
+                <h1 class="text-xl font-extrabold text-[#d4821a]">Damongo CIC</h1>
                 <p class="text-sm text-[#e8d5a3]/80 mt-1">QR Session Check-in</p>
                 <p class="text-xs text-[#e8d5a3]/50 mt-1">{{ session.date }}{% if session.title %} — {{ session.title }}{% endif %}</p>
             </div>
@@ -74,32 +74,40 @@
                 </div>
 
                 {% else %}
-                <!-- ── Confirm check-in ── -->
-                <!-- Identity card — shows who is checking in, no input needed -->
+                <!-- ── QR Scanner ── -->
+                <!-- Identity card — shows who is checking in -->
                 <div class="bg-[#f5f5e0] border border-[#d4821a]/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-sm font-bold text-[#d4821a] flex-shrink-0">
+                    <div class="w-11 h-11 rounded-full bg-[#d4821a]/15 flex items-center justify-center text-sm font-bold text-[#d4821a] shrink-0">
                         {{ applicant.user.first_name|first|upper }}{{ applicant.user.last_name|first|upper }}
                     </div>
                     <div>
                         <p class="text-sm font-bold text-[#3d3520]">{{ applicant.user.get_full_name }}</p>
                         <code class="text-xs text-[#3d3520]/50 font-mono">{{ applicant.user.username }}</code>
                     </div>
-                    <svg class="w-5 h-5 text-green-500 ml-auto flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-green-500 ml-auto shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
                 </div>
 
-                <p class="text-sm text-[#3d3520]/60 text-center mb-5">
-                    Confirm your attendance for today's session.
+                <p class="text-sm text-[#3d3520]/60 text-center mb-4">
+                    Scan the QR code to check in for this session.
                 </p>
 
-                <form method="post">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="w-full py-3 text-base font-semibold text-white bg-[#d4821a] rounded-lg hover:bg-[#b86e14] active:scale-95 transition-all">
-                        Confirm Check-in
-                    </button>
-                </form>
+                <!-- QR Scanner Container -->
+                <div id="qr-reader" class="mb-6" style="width: 100%;"></div>
+
+                <!-- Result Box for Messages -->
+                <div id="resultBox" class="mt-4"></div>
+
+                <!-- Instructions -->
+                <div class="bg-[#e8d5a3]/20 rounded-lg p-4 mt-6 border border-[#d4821a]/30">
+                    <p class="text-xs text-[#3d3520]/70 font-semibold uppercase tracking-wider mb-2">How to scan:</p>
+                    <ol class="text-xs text-[#3d3520]/60 space-y-1 list-decimal list-inside">
+                        <li>Position the QR code in the camera frame</li>
+                        <li>The scanner will automatically detect it</li>
+                        <li>Your attendance will be recorded</li>
+                    </ol>
+                </div>
 
                 <p class="text-center text-xs text-[#3d3520]/40 mt-4">
                     Not you?
@@ -113,4 +121,161 @@
 
     </div>
 </section>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const resultBox = document.getElementById("resultBox");
+    
+    // Fix 1: Encapsulate the Django tag inside quotes to prevent UUID crash.
+    // Also use a fallback string so JavaScript doesn't break if session is None.
+    const sessionId = "{{ session.id|default:'' }}";
+    
+    let lastScanned = null;
+    let cooldown = false;
+
+    // Guard Clause: Instantly inform if template variables were missing 
+    if (!sessionId) {
+        showMessage("error", "<strong>No active session found.</strong> Cannot initialize scanner configuration.");
+        return;
+    }
+
+    function showMessage(type, text) {
+        if (!resultBox) return; // Prevent errors if element is absent
+        resultBox.className = "mt-4 p-4 rounded-xl border shadow font-semibold";
+        
+        if (type === "success") {
+            resultBox.classList.add("bg-green-50", "border-green-300", "text-green-700");
+        } else if (type === "warning") {
+            resultBox.classList.add("bg-yellow-50", "border-yellow-300", "text-yellow-700");
+        } else {
+            resultBox.classList.add("bg-red-50", "border-red-300", "text-red-700");
+        }
+
+        resultBox.innerHTML = text;
+    }
+
+    async function verifyAttendance(scannedToken) {
+        try {
+            const response = await fetch('{% url "verify_qr_code" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    scanned_token: scannedToken,
+                    session_id: sessionId, // Passes stringified ID matching Python expectations
+                })
+            });
+
+            const data = await response.json();
+
+            // Handle non-200 HTTP status configurations accurately
+            if (!response.ok) {
+                showMessage("error", `<strong>✗ Error!</strong> ${data.error || "Something went wrong verifying your QR code."}`);
+                resetScannerState();
+                return;
+            }
+
+            // Handle Results
+            if (data.success) {
+                showMessage("success", `
+                    <strong>✓ Check-in Successful!</strong><br>
+                    Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}<br>
+                    Welcome, ${data.applicant_name || 'Applicant'}. You are checked in.
+                `);
+                
+                // Clear out the scanner immediately on success to stop processing frames
+                try { qrScanner.clear(); } catch(e) {}
+                
+                // Reload to reflect modifications
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } 
+            else {
+                // Evaluate dynamic errors returned from Django view cleanly
+                if (data.error.includes("already")) {
+                    showMessage("warning", `<strong>⚠ Already Checked In!</strong><br>${data.error}`);
+                } else if (data.error.includes("Invalid")) {
+                    showMessage("error", `<strong>✗ Invalid QR Code!</strong> This token does not match this session.`);
+                } else if (data.error.includes("ended")) {
+                    showMessage("error", `<strong>✗ Session Ended!</strong> ${data.error}`);
+                } else {
+                    showMessage("error", `<strong>✗ Error!</strong> ${data.error}`);
+                }
+                resetScannerState();
+            }
+
+        } catch (err) {
+            console.error("Verification error:", err);
+            showMessage("error", "Network connection dropped. Please check connection and re-scan.");
+            resetScannerState();
+        }
+    }
+
+    // Helper helper function to wipe memory logs when a scan cycle fails
+    function resetScannerState() {
+        setTimeout(() => {
+            cooldown = false;
+            lastScanned = null; // Fix 3: Allows re-scanning the same code if an error happened
+        }, 3000); // 3 second cooldown gives time for user to view the error message
+    }
+
+    function onScanSuccess(decodedText) {
+        // Prevent spam scanning same code
+        if (cooldown || decodedText === lastScanned) return;
+        
+        cooldown = true;
+        lastScanned = decodedText;
+
+        console.log("QR Code Detected:", decodedText);
+        showMessage("warning", "Communicating with verification server...");
+        verifyAttendance(decodedText);
+    }
+
+    function onScanError(error) {
+        // This floods console if left unmuted, very normal for video processors.
+        // Left empty to preserve battery/performance logs.
+    }
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Fix 2: Changed supportedScanTypes configuration mapping to match standard library specifications
+    const qrScanner = new Html5QrcodeScanner("qr-reader", {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        rememberLastUsedCamera: true,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA], // Target direct camera capture streams
+        aspectRatio: 1.0,
+    });
+
+    qrScanner.render(onScanSuccess, onScanError);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        try {
+            qrScanner.clear();
+        } catch (e) {
+            console.log('Scanner cleanup completed.');
+        }
+    });
+});
+</script>
 {% endblock %}

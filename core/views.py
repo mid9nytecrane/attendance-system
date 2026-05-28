@@ -6,11 +6,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from .models import Applicant, Session, AttendanceRecord
+import json
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
@@ -105,6 +106,12 @@ def register_view(request):
         if password != password2:
             messages.error(request, 'Passwords do not match.')
             return render(request, 'core/register.html', {'post': request.POST, 'cohort_choices': Applicant.COHORT_CHOICES})
+        
+        name_exists = User.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name).exists()
+
+        if name_exists:
+            messages.error(request, 'A user with first name and last name is already registered.')
+            return render(request, 'core/register.html', {'post': request.POST, 'cohort_choices': Applicant.COHORT_CHOICES})
 
         # Generate unique user ID
         user_id = generate_user_id()
@@ -136,58 +143,99 @@ def _redirect_after_login(user):
 # ─── QR Check-in ─────────────────────────────────────────────────────────────
 
 @login_required(login_url='login')
-def qr_checkin_view(request, token):
+def qr_checkin_view(request):
     """
-    QR check-in — requires the applicant to be logged in.
-    They can only check in themselves; no username field is accepted.
+    Renders the HTML5 webcam/camera scanner interface page.
+    This view NO LONGER looks up tokens via URL arguments.
     """
-    session = get_object_or_404(Session, qr_token=token, is_active=True)
-
-    # Admins don't have an applicant profile — redirect them away
     if request.user.is_staff:
-        messages.info(request, 'Admins do not check in. Use the admin panel to manage attendance.')
+        messages.info(request, "Admins are not check in. Use the admin panel to manage attendance.")
         return redirect('admin_dashboard')
-
+    
     try:
         applicant = request.user.applicant
-    except Applicant.DoesNotExist:
-        messages.error(request, 'No applicant profile found for your account.')
+    except AttributeError:
+        messages.error(request, 'No applicant profile found for your account')
         return redirect('home')
-
-    # Real-time end-time guard (catches the gap before the scheduler fires)
-    now_time = timezone.localtime(timezone.now()).time()
-    if session.end_time and now_time >= session.end_time:
-        session.is_active = False
-        session.save(update_fields=['is_active'])
-        return render(request, 'core/qr_checkin.html', {'session_ended': True})
-
-    already_checked_in = AttendanceRecord.objects.filter(
-        applicant=applicant, session=session
-    ).exists()
-
-    if request.method == 'POST':
-        if already_checked_in:
-            messages.warning(request, 'You have already checked in for this session.')
-            return render(request, 'core/qr_checkin.html', {
-                'session': session, 'already_checked_in': True
-            })
-
-        now_time = timezone.localtime(timezone.now()).time()
-        status = 'late' if now_time > session.late_after else 'present'
-        AttendanceRecord.objects.create(applicant=applicant, session=session, status=status)
-
-        return render(request, 'core/qr_checkin.html', {
-            'session': session,
-            'checked_in': True,
-            'status': status,
-            'applicant': applicant,
-        })
+    
+    # Find if there is an active session right now so the template script 
+    # can access its internal ID value
+    active_session = Session.objects.filter(is_active=True).first()
 
     return render(request, 'core/qr_checkin.html', {
-        'session': session,
+        'session': active_session,
         'applicant': applicant,
-        'already_checked_in': already_checked_in,
     })
+
+
+@login_required(login_url='login')
+def verify_qr_code(request):
+    """
+    AJAX endpoint to verify scanned QR code and check in applicant.
+    Expects POST request with scanned_token and session_id.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        scanned_token = data.get('scanned_token', '').strip()
+        session_id = data.get('session_id')
+
+        if not scanned_token or not session_id:
+            return JsonResponse({'success': False, 'error': 'Missing required fields'})
+
+        # Get session and verify it's active
+        session = get_object_or_404(Session, pk=session_id, is_active=True)
+
+        # Verify scanned token matches session's qr_token
+        if str(session.qr_token) != scanned_token:
+            return JsonResponse({'success': False, 'error': 'Invalid QR code for this session'})
+
+        # Admins don't check in
+        if request.user.is_staff:
+            return JsonResponse({'success': False, 'error': 'Admins cannot check in'})
+
+        # Get applicant profile
+        try:
+            applicant = request.user.applicant
+        except Applicant.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No applicant profile found'})
+
+        # Check if already checked in
+        if AttendanceRecord.objects.filter(applicant=applicant, session=session).exists():
+            return JsonResponse({'success': False, 'error': 'You have already checked in for this session'})
+
+        # Real-time end-time guard
+        now_time = timezone.localtime(timezone.now()).time()
+        if session.end_time and now_time >= session.end_time:
+            session.is_active = False
+            session.save(update_fields=['is_active'])
+            return JsonResponse({'success': False, 'error': 'Session has ended'})
+
+        # Determine status based on late_after time
+        status = 'late' if now_time > session.late_after else 'present'
+
+        # Create attendance record
+        record = AttendanceRecord.objects.create(
+            applicant=applicant,
+            session=session,
+            status=status
+        )
+
+        return JsonResponse({
+            'success': True,
+            'status': status,
+            'applicant_name': applicant.user.get_full_name() or applicant.user.username,
+            'message': f'Successfully checked in as {status}!'
+        })
+
+    except Session.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Session not found'})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'})
 
 
 # ─── Manual fallback check-in (no QR) ────────────────────────────────────────

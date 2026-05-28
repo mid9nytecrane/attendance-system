@@ -8,7 +8,7 @@
         <!-- Greeting -->
         <div class="mb-8">
             <h1 class="text-3xl font-extrabold text-[#3d3520]">
-                Welcome, <span class="text-[#d4821a]">{{ applicant.user.get_full_name|default:applicant.user.username }}</span>
+                Welcome, <span class="text-[#d4821a]">{{ applicant.user.get_full_name|default:applicant.user.username }} ({{request.user.username}})</span>
             </h1>
             {% if applicant.cohort %}
             <p class="text-sm text-[#3d3520]/60 mt-1">{{ applicant.cohort }}</p>
@@ -18,7 +18,7 @@
         <!-- QR check-in card -->
         <div class="flex flex-col items-center gap-3 mb-10">
             {% if active_session %}
-            <a href="{% url 'qr_checkin' active_session.qr_token %}"
+            <a href="{% url 'qr_checkin'  %}"
             {% else %}
             <div
             {% endif %}
